@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Pong - 12 Vật Phẩm Siêu Thú Vị</title>
+  <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app">
+    <div class="max-w-2xl mx-auto px-4 py-8">
+      <div class="text-center mb-6">
+        <h1 class="text-4xl sm:text-5xl font-extrabold tracking-tight mb-2">
+          <span class="gradient-text">PONG</span>
+        </h1>
+        <p class="text-sm text-muted">12 vật phẩm đặc biệt · Ăn đúng là đổi cả ván</p>
+      </div>
+
+      <div class="flex justify-between items-center max-w-md mx-auto mb-4 px-4">
+
+        <button id="backBtn" class="pm-btn small ghost" style="margin:0;padding:6px 12px;font-size:12px;">← Menu</button>
+
+        <div class="text-center">
+          <div class="text-xs uppercase tracking-wider font-semibold mb-1 accent-color">Bạn</div>
+          <div id="playerScore" class="text-5xl font-extrabold tabular-nums accent-color">0</div>
+        </div>
+        <div class="text-3xl font-bold text-muted">—</div>
+        <div class="text-center">
+          <div class="text-xs uppercase tracking-wider font-semibold mb-1 accent2-color">Máy</div>
+          <div id="aiScore" class="text-5xl font-extrabold tabular-nums accent2-color">0</div>
+        </div>
+        <div style="width:70px"></div>
+      </div>
+
+      <div class="game-wrapper">
+        <canvas id="game" width="600" height="400"></canvas>
+        <div id="overlay" class="overlay">
+          <div id="overlayTitle" class="text-3xl sm:text-4xl font-extrabold text-white mb-3 text-center px-4">Sẵn sàng chưa?</div>
+          <div id="overlaySub" class="text-sm mb-6 text-center px-4 text-slate-300">Cẩn thận vật phẩm 💀 THẤT BẠI - ăn là thua ngay!</div>
+          <button id="startBtn" class="btn-press pulse-glow btn-gradient">Bắt đầu chơi</button>
+        </div>
+      </div>
+
+      <div class="mobile-controls">
+        <button id="upBtn" class="control-btn btn-press">↑</button>
+        <button id="downBtn" class="control-btn btn-press">↓</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ✅ THỨ TỰ ĐÚNG: items.js TRƯỚC script.js -->
+  <script src="items.js"></script>
+  <script src="gacha.js"></script>
+  <script src="achievements.js"></script>
+  <script src="ai.js"></script>
+  <script src="menu.js"></script>    
+  <script src="debug.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

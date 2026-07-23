@@ -1,0 +1,78 @@
+:root {
+    --bg: #faf8fc; --card: #ffffff; --text: #0f172a; --muted: #64748b;
+    --accent: #8b5cf6; --accent-soft: rgba(139,92,246,.14);
+    --accent2: #e03e6b; --accent2-soft: rgba(224,62,107,.14);
+    --border: rgba(15,23,42,.07);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { -webkit-tap-highlight-color: transparent; }
+  body {
+    font-family: 'Urbanist', sans-serif; color: var(--text);
+    background: radial-gradient(1000px 500px at 50% -10%, rgba(139,92,246,.12), transparent 60%), var(--bg);
+    min-height: 100vh; overflow-x: hidden;
+  }
+  .text-muted { color: var(--muted); } .text-dark { color: var(--text); }
+  .accent-color { color: var(--accent); } .accent2-color { color: var(--accent2); }
+  
+  .btn-press {
+    transition: transform .08s ease, box-shadow .2s ease; cursor: pointer !important;
+    pointer-events: auto !important; -webkit-user-select: none; user-select: none;
+    touch-action: manipulation; border: none; outline: none;
+  }
+  .btn-press:active { transform: scale(0.94); }
+  
+  .pulse-glow { animation: pulse 2s infinite; }
+  @keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(139,92,246,.45); }
+    70% { box-shadow: 0 0 0 16px rgba(139,92,246,0); }
+    100% { box-shadow: 0 0 0 0 rgba(139,92,246,0); }
+  }
+  .gradient-text {
+    background: linear-gradient(100deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .btn-gradient {
+    background: linear-gradient(100deg, var(--accent), var(--accent2));
+    color: #fff; padding: 14px 36px; border-radius: 999px;
+    font-size: 17px; font-weight: 700; z-index: 50;
+  }
+  
+  .btn-layer { position: relative; z-index: 20; }
+  .diff-btn {
+    padding: 9px 18px; border-radius: 999px; font-size: 14px; font-weight: 600;
+    background: var(--card); color: var(--muted); border: 1px solid var(--border); z-index: 21;
+  }
+  .diff-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  
+  .game-wrapper {
+    position: relative; width: 100%; max-width: 600px; margin: 0 auto;
+    border-radius: 20px; overflow: hidden; border: 2px solid var(--border);
+    box-shadow: 0 20px 60px rgba(139,92,246,.15); background: #0f172a; z-index: 10;
+  }
+  #game { width: 100%; height: auto; display: block; touch-action: none; }
+  
+  .overlay {
+    position: absolute; inset: 0; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    background: rgba(15,23,42,.88); backdrop-filter: blur(6px); z-index: 40;
+  }
+  /* ✅ CLASS QUAN TRỌNG: ẩn overlay đúng cách */
+  .overlay.hidden { display: none !important; }
+  
+  .mobile-controls {
+    display: none; justify-content: center; gap: 28px; margin-top: 24px;
+    position: relative; z-index: 999 !important;
+  }
+  @media (max-width: 640px) { .mobile-controls { display: flex; } }
+  .control-btn {
+    width: 88px; height: 88px; border-radius: 22px; background: var(--accent);
+    color: #fff; font-size: 38px; font-weight: 800;
+    box-shadow: 0 10px 30px rgba(139,92,246,.4); z-index: 999;
+  }
+  
+  .card { background: var(--card); border: 1px solid var(--border); }
+  .key-tag {
+    display: inline-block; padding: 2px 9px; border-radius: 6px;
+    font-size: 12px; font-family: ui-monospace, monospace;
+    background: var(--accent-soft); color: var(--accent); font-weight: 600;
+  }
