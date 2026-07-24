@@ -1,9 +1,8 @@
 // ============================================================
-//  items.js - ĐÃ SỬA LỖI VỢT + RESET TOÀN BỘ KHI END GAME
+//  items.js 
 // ============================================================
 (function () {
   'use strict';
-
   const Items = {
     cfg: { TRAIL:true, COUNTDOWN:true, SHAKE:true, FLOAT:true, COMBO:true, GHOST:false },
     s: {
@@ -13,6 +12,8 @@
       isBomb:false, bombT:0, player:null, ai:null, ball:null, onLose:null,
       trail: [], cd: 0, cdCb: null, sT:0, sM:0, floats:[],
       combo:0, lastHit:null, gA:1, gT:0, _sp:0,
+      // ✅ Lưu trạng thái gốc để hoàn tác chính xác
+      saved: { ballR:8, ballVx:0, ballVy:0, plH:80, aiH:80 }
     },
     _db: [
       {id:'speed200', n:'BÓNG NHANH',   c:'#ef4444', e:'⚡', w:'ball', d:6000},
@@ -28,22 +29,22 @@
       {id:'clone',     n:'NHÂN ĐÔI',      c:'#10b981', e:'✌️', w:'ball', d:0},
       {id:'bomb',      n:'BOM CHOÁNG',    c:'#000000', e:'💣', w:'ball', d:10000},
     ],
-
     init(ctx, W, H, refs){
       this.s.ctx=ctx; this.s.W=this.s.curW=W; this.s.H=this.s.curH=H;
       Object.assign(this.s, refs);
-      console.log('✅ items.js - Đã sửa lỗi vợt + Reset All');
+      this.s.saved = { ballR:8, ballVx:0, ballVy:0, plH:80, aiH:80 };
+      console.log('✅ items.js - Đã sửa hoàn tác vận tốc + tránh ghi đè gacha');
     },
-
-    spawn(){const t=this._db[Math.floor(Math.random()*this._db.length)];this.s.list.push({x:this.s.curW/2,y:30,vy:1.5,r:15,type:t,rot:0});},
-
+    spawn(){const t=this._db[Math.floor(Math.random()*this._db.length)];
+      // ✅ Vật phẩm rơi ngẫu nhiên toàn bộ chiều rộng sân
+      this.s.list.push({x:60+Math.random()*(this.s.curW-120),y:30,vy:1.5,r:15,type:t,rot:0});},
     update(dt){
       const s=this.s;
       for(let i=s.list.length-1;i>=0;i--){const it=s.list[i];it.y+=it.vy;it.rot+=0.05;if(it.y>s.curH+50)s.list.splice(i,1);}
       const n=Date.now();
       s.active=s.active.filter(e=>{if(n>=e.end){this._end(e);return false;}return true;});
       ['stun','slow','fast'].forEach(k=>{['player','ai'].forEach(p=>{if(s[k][p]>0)s[k][p]=Math.max(0,s[k][p]-dt);});});
-      if(s.isBomb){s.bombT-=dt;if(s.bombT<=0){s.isBomb=false;s.ball.r=8;}}
+      if(s.isBomb){s.bombT-=dt;if(s.bombT<=0){s.isBomb=false;s.ball.r=s.saved.ballR;}}
       s.illusions.forEach(il=>{il.x+=il.vx;il.y+=il.vy;if(il.y-il.r<0||il.y+il.r>s.curH)il.vy*=-1;il.life-=dt;});
       s.illusions=s.illusions.filter(il=>il.x>-50&&il.x<s.curW+50&&il.life>0);
       s._sp+=dt;if(s._sp>5500+Math.random()*3500){s._sp=0;this.spawn();}
@@ -52,7 +53,6 @@
       if(this.cfg.FLOAT){s.floats.forEach(f=>{f.y+=f.vy;f.l-=dt/900;});s.floats=s.floats.filter(f=>f.l>0);}
       if(s.sT>0){s.sT=Math.max(0,s.sT-dt);if(s.sT<=0)s.sM=0;}
     },
-
     checkPickup(who){
       const s=this.s;
       const balls=[s.ball,...s.clones.filter(c=>c.alive)];
@@ -70,23 +70,40 @@
       }
       return null;
     },
-
-    // ✅ ĐÃ SỬA: dùng luôn 'player'/'ai' KHÔNG dùng p/a nữa → không còn lỗi undefined
     _apply(t,who){
       const s=this.s, n=Date.now();
       const opp = who === 'player' ? 'ai' : 'player';
+      // ✅ Lưu trạng thái TRƯỚC KHI thay đổi để hoàn tác CHÍNH XÁC
       switch(t.id){
-        case 'speed200':  s.ball.vx*=3;s.ball.vy*=3;s.active.push({id:t.id,end:n+t.d});break;
-        case 'bigSlow':   s.ball.r=12;s.ball.vx*=.5;s.ball.vy*=.5;s.active.push({id:t.id,end:n+t.d});break;
+        case 'speed200':
+          s.saved.ballVx = s.ball.vx; s.saved.ballVy = s.ball.vy;
+          s.ball.vx*=3;s.ball.vy*=3;
+          s.active.push({id:t.id,end:n+t.d, saved:{vx:s.saved.ballVx/3,vy:s.saved.ballVy/3}});
+          break;
+        case 'bigSlow':
+          s.saved.ballR = s.ball.r; s.saved.ballVx=s.ball.vx; s.saved.ballVy=s.ball.vy;
+          s.ball.r=12;s.ball.vx*=.5;s.ball.vy*=.5;
+          s.active.push({id:t.id,end:n+t.d, saved:{r:8, vx:s.saved.ballVx*2, vy:s.saved.ballVy*2}});
+          break;
         case 'paddleLen':
-          s[who].h = 120;              // Người ăn = DÀI
-          s[opp].h = 45;               // Đối thủ = NGẮN
-          s.active.push({id:t.id, end:n+t.d, who, opp});
+          s.saved.plH = s.player.h; s.saved.aiH = s.ai.h;
+          // ✅ SỬA: nếu Gacha đang giữ chiều cao → cộng dồn thay vì ghi đè
+          s[who].h = Math.min(180, Math.round(s[who].h * 1.5));
+          s[opp].h = Math.max(30, Math.round(s[opp].h * 0.56));
+          s.active.push({id:t.id, end:n+t.d, who, opp, saved:{plH:s.saved.plH, aiH:s.saved.aiH}});
           break;
         case 'expand':
+          s.active.push({id:t.id,end:n+t.d});
           s.curW=Math.round(s.W*1.5);s.curH=Math.round(s.H*1.5);
-          s.active.push({id:t.id,end:n+t.d});break;
-        case 'smallFast': s.ball.r=4;s.ball.vx*=2;s.ball.vy*=2;s.active.push({id:t.id,end:n+t.d});break;
+          // ✅ Di chuyển cả 2 vợt vào trong sân mới
+          s.player.y = Math.max(0, Math.min(s.curH-s.player.h, s.player.y));
+          s.ai.y = Math.max(0, Math.min(s.curH-s.ai.h, s.ai.y));
+          break;
+        case 'smallFast':
+          s.saved.ballR=s.ball.r; s.saved.ballVx=s.ball.vx; s.saved.ballVy=s.ball.vy;
+          s.ball.r=4;s.ball.vx*=2;s.ball.vy*=2;
+          s.active.push({id:t.id,end:n+t.d, saved:{r:8, vx:s.saved.ballVx/2, vy:s.saved.ballVy/2}});
+          break;
         case 'stun':      s.stun[opp]=t.d;break;
         case 'illusion':
           for(let i=0;i<2;i++){const o=(i===0?-1:1)*18;
@@ -101,24 +118,59 @@
         case 'bomb':      s.isBomb=true;s.bombT=t.d;s.ball.r=10;break;
       }
     },
-
-    // ✅ ĐÃ SỬA HOÀN TÁC ĐÚNG: vợt chắc chắn về 80
     _end(e){
       const s=this.s;
       switch(e.id){
-        case 'bigSlow':   s.ball.r = 8; break;
-        case 'smallFast': s.ball.r = 8; break;
+        case 'bigSlow':
+        case 'smallFast':
+          if(e.saved){
+            s.ball.r = e.saved.r;
+            // ✅ Chỉ hoàn tác nếu vận tốc chưa bị hiệu ứng KHÁC thay đổi quá nhiều
+            const curSp = Math.hypot(s.ball.vx, s.ball.vy);
+            const oldSp = Math.hypot(e.saved.vx, e.saved.vy);
+            if(curSp > 0 && Math.abs(curSp-oldSp)/oldSp < 0.4){
+              const ratio = oldSp/curSp;
+              s.ball.vx *= ratio; s.ball.vy *= ratio;
+            }
+          }
+          break;
+        case 'speed200':
+          if(e.saved){
+            const curSp = Math.hypot(s.ball.vx, s.ball.vy);
+            const targetSp = Math.hypot(e.saved.vx, e.saved.vy);
+            if(curSp>0 && targetSp>0){
+              const ratio = targetSp/curSp;
+              s.ball.vx *= ratio; s.ball.vy *= ratio;
+            }
+          }
+          break;
         case 'paddleLen':
-          // Hoàn tác BỂN AI VÀ BẠN về 80px - CHẮC CHẮN KHÔNG GỌI NHẦM
-          if (e.who) s[e.who].h = 80;
-          if (e.opp) s[e.opp].h  = 80;
+          // ✅ HOÀN TÁC CHÍNH XÁC: chỉ về kích thước LƯU TRƯỚC, không cứng 80
+          // Nếu Gacha có hiệu ứng đang chạy → để Gacha tự hoàn tác sau
+          if(window.Gacha && Gacha.s.active.some(g=>['g_long','g_short','g_xlong'].includes(g.eff.id))){
+            // Gacha đang nắm quyền chiều cao → Items nhường, không làm gì
+            break;
+          }
+          if(e.saved){
+            s.player.h = e.saved.plH;
+            s.ai.h = e.saved.aiH;
+          } else {
+            s.player.h = 80; s.ai.h = 80;
+          }
+          // ✅ Clamp vị trí vợt sau khi thu ngắn
+          s.player.y = Math.max(0, Math.min(s.curH-s.player.h, s.player.y));
+          s.ai.y = Math.max(0, Math.min(s.curH-s.ai.h, s.ai.y));
           break;
         case 'expand':
           s.curW = s.W; s.curH = s.H;
+          // ✅ KÉO VỢT AI VỀ VỊ TRÍ ĐÚNG sau khi sân thu nhỏ
+          s.ai.x = s.W - 20 - 12;
+          s.player.x = 20;
+          s.player.y = Math.max(0, Math.min(s.H-s.player.h, Math.min(s.player.y, s.H-s.player.h)));
+          s.ai.y = Math.max(0, Math.min(s.H-s.ai.h, Math.min(s.ai.y, s.H-s.ai.h)));
           break;
       }
     },
-
     // ============================================================
     //  ✅ RESET TOÀN BỘ - GỌI KHI THẮNG / THUA
     // ============================================================
@@ -128,35 +180,47 @@
       s.active.forEach(e => this._end(e));
       // 2. Xóa sạch hàng đợi
       s.active = [];
-      s.list = [];          // Vật phẩm đang rơi
-      s.illusions = [];     // Bóng ảo
-      s.clones = [];        // Bóng nhân đôi
-      s.floats = [];        // Chữ bay
-      s.trail = [];         // Vệt bóng
+      s.list = [];
+      s.illusions = [];
+      s.clones = [];
+      s.floats = [];
+      s.trail = [];
       // 3. Reset trạng thái đối tượng
       s.stun = {player:0, ai:0};
       s.slow = {player:0, ai:0};
       s.fast = {player:0, ai:0};
       s.isBomb = false; s.bombT = 0;
-      if (s.ball) s.ball.r = 8;
-      if (s.player) s.player.h = 80;  // Vợt bạn về 80
-      if (s.ai)     s.ai.h     = 80;  // Vợt máy về 80
+      if (s.ball) { s.ball.r = 8; }
+      // ✅ Chỉ reset vợt nếu Gacha KHÔNG còn hiệu ứng chiều cao
+      if(!window.Gacha || !Gacha.s.active.some(g=>['g_long','g_short','g_xlong'].includes(g.eff.id))){
+        if (s.player) s.player.h = 80;
+        if (s.ai)     s.ai.h     = 80;
+      }
       // 4. Reset kích thước sân về gốc
       s.curW = s.W; s.curH = s.H;
+      if(s.ai) s.ai.x = s.W - 20 - 12;
+      if(s.player) s.player.x = 20;
       // 5. Reset extras
       s.combo = 0; s.lastHit = null;
       s.cd = 0; s.cdCb = null;
-      s.sT = 0; s.sM = 0;        // DỪA RUNG NGAY
+      s.sT = 0; s.sM = 0;
       s.gA = 1; s.gT = 0;
       s._sp = 0;
-      console.log('🧹 Items + Extras đã RESET HẾT');
+      s.saved = { ballR:8, ballVx:0, ballVy:0, plH:80, aiH:80 };
+      console.log('🧹 Items + Extras đã RESET HẾT (đã sửa trùng lặp Gacha)');
     },
-
-    onPaddleHit(who){if(!this.s.isBomb)return;this.s.stun[who]=1000;this.s.isBomb=false;this.s.ball.r=8;this.float('💥 CHOÁNG!',who==='player'?80:this.s.curW-80,this.s.curH/2,'#ef4444');this.shake(12,500);},
+    onPaddleHit(who){
+      if(!this.s.isBomb)return;
+      this.s.stun[who]=1000;
+      this.s.isBomb=false;
+      this.s.bombT=0; // ✅ Reset timer bom luôn
+      this.s.ball.r=this.s.saved.ballR;
+      this.float('💥 CHOÁNG!',who==='player'?80:this.s.curW-80,this.s.curH/2,'#ef4444');
+      this.shake(12,500);
+    },
     clearClones(){this.s.clones=[];},
     getSpeed(base,who){let v=base;if(this.s.fast[who]>0)v*=2;if(this.s.slow[who]>0)v*=.5;if(this.s.stun[who]>0)v=0;return v;},
     getField(){return{W:this.s.curW,H:this.s.curH};},
-
     // ===== EXTRAS =====
     addTrail(x,y,r){if(!this.cfg.TRAIL)return;this.s.trail.push({x,y,r,l:1});if(this.s.trail.length>18)this.s.trail.shift();},
     cdStart(cb){if(!this.cfg.COUNTDOWN){cb();return;}this.s.cd=3;this.s.cdCb=cb;const t=()=>{this.s.cd--;if(this.s.cd<=0){this.s.cdCb&&this.s.cdCb();this.s.cdCb=null;}else setTimeout(t,700);};setTimeout(t,700);},
@@ -168,7 +232,6 @@
     score(){const s=this.s;const b=this.cfg.COMBO?Math.max(1,Math.floor(s.combo/3)):1;s.combo=0;s.lastHit=null;return b;},
     gb(){return this.s.combo;},
     ballAlpha(){return this.s.gA;},
-
     draw(){
       const s=this.s,c=s.ctx;if(!c)return;
       s.list.forEach(it=>{
@@ -218,6 +281,5 @@
       }
     },
   };
-
   window.Items = Items;
 })();

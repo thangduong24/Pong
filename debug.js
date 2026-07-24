@@ -215,6 +215,7 @@
             }
             break;
           case 'reset-all':
+            if(r.resetGame) r.resetGame(); // Reset game TRƯỚC
             if(window.Items) Items.resetAll();
             if(window.Gacha) Gacha.resetAll();
             if(r.resetGame) r.resetGame();
